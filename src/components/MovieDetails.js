@@ -1,39 +1,19 @@
-// Importerer nødvendige hooks fra React og router-funktionalitet fra react-router-dom
-import React, { useEffect, useState } from 'react';
+// Importerer React og nødvendige hooks
+import React from 'react';
 import { useParams } from 'react-router-dom';
+// Importerer den auto-genererede RTK Query hook for at hente detaljer om en specifik film - Der bruges ''useGetMovieDetailsQuery''
+import { useGetMovieDetailsQuery } from '../features/movies/movieSlice';
 
 // Definerer 'MovieDetails' komponenten, der bruges til at vise detaljer om en specifik film
 const MovieDetails = () => {
-    // Henter filmens ID fra URL'en gennem useParams hook, der giver adgang til routerens parametre
+    // Henter filmens ID fra URL'en gennem useParams hook
     const { movieId } = useParams();
-    // Opretter tre state variabler:
-    // 'movie' til at gemme filmdata, initialiseret som null indtil data hentes
-    // 'isLoading' til at vise/håndtere indlæsningsstatus
-    // 'error' til at gemme eventuelle fejlmeddelelser fra fetch operationen
-    const [movie, setMovie] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // Bruger den auto-genererede RTK Query hook for at anmode om film detaljer
+    const { data: movie, isFetching, isError, error } = useGetMovieDetailsQuery(movieId);
 
-    // useEffect hook der udføres ved komponentens mount og når 'movieId' ændres
-    useEffect(() => {
-        setIsLoading(true); // Sætter indlæsningsstatus til true ved start af datahentning
-        // Starter en fetch operation for at hente filmdata fra TheMovieDB API
-        fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=54f6763edd46376d94f989e66c5eefff&language=en-US`)
-            .then(response => response.json()) // Parser svaret som JSON
-            .then(data => {
-                console.log(data);  // Logger data'en til at se hvad der er hentet.
-                setMovie(data); // Opdaterer 'movie' state med de hentede data
-                setIsLoading(false); // Sætter indlæsningsstatus til false efter data er hentet
-            })
-            .catch(err => { 
-                setError(err.message); // Sætter en fejlmeddelelse hvis fetch fejler
-                setIsLoading(false); // Sætter indlæsningsstatus til false hvis der opstår en fejl
-            });
-    }, [movieId]) // Afhængighed af 'movieId' sikrer, at data genhentes når ID ændres
-
-    // Konditionelle renderinger baseret på state:
-    if (isLoading) return <div>Loading...</div>; // Viser en loading besked under datahentning
-    if (error) return <div>Error: {error}</div>; // Viser en fejlmeddelelse hvis der er fejl
+    // Konditionelle renderinger baseret på query state
+    if (isFetching) return <div>Fetching...</div>; // Viser en indlæsningsbesked
+    if (isError) return <div>Error: {error}</div>; // Viser en fejlmeddelelse hvis der er fejl
     if (!movie) return <div>No movie found</div>; // Viser en besked hvis ingen film er fundet
     
     // Hoved JSX der returneres, når der ikke er fejl eller loading, med andre ord, så returnerer JSX, der viser filmens detaljer
